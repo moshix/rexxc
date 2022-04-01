@@ -12,11 +12,11 @@
 /*  V0.2    :  time keeping, help for user                           */
 /*  V0.3    :  lexicon in raw format, needs to convert into rexx stem*/
 /*  V0.4    :  Peter's first parser                                  */
-/*  V0.5    :                                                        */
+/*  V0.5    :  Make lexical rules an outside file                    */
  
  
 /* configuraiton parameters - IMPORTANT                              */
-version="0.4"              /*                                        */
+version="0.5"              /*                                        */
 log2file=0                 /* log everything to $file.log            */
  
 /* global variables                                                  */
@@ -32,7 +32,7 @@ logline = " "            /* initialize log line                      */
  
  
 call initrexxc           /* initalize rexxc  and do all the fancy stuff to start */
-call readlex             /* read in lexicon into memory                          */
+call generateparser      /* read in lexicon into memory                          */
 call readsource          /* read source into memory                              */
 call parse               /* parse code                                           */ 
  
@@ -219,150 +219,136 @@ list:
   call sy 'showing list'                      ;  call @show
 return
  
-readlex:
-/* this reads the REXX lexicon into memory */
-/* skippable stuff */
-STMT_INCLUDE                    :   Include_Statement 
-LINE_COMMENT                    :   Line_Comment_
-BLOCK_COMMENT                   :   Block_Comment_
-WHISPACES                       :   Whitespaces_   
-CONTINUATION                    :   Continue_    
 
-/* Keywords        */
-KWD_ADDRESS                     :   A D D R E S S ;
-KWD_ARG                         :   A R G ;
-KWD_BY                          :   B Y ;
-KWD_CALL                        :   C A L L ;
-KWD_DIGITS                      :   D I G I T S ;
-KWD_DO                          :   D O ;
-KWD_DROP                        :   D R O P ;
-KWD_ELSE                        :   E L S E ;
-KWD_END                         :   E N D ;
-KWD_ENGINEERING                 :   E N G I N E E R I N G ;
-KWD_ERROR                       :   E R R O R ;
-KWD_EXIT                        :   E X I T ;
-KWD_EXPOSE                      :   E X P O S E ;
-KWD_EXTERNAL                    :   E X T E R N A L ;
-KWD_FAILURE                     :   F A I L U R E ;
-KWD_FOR                         :   F O R ;
-KWD_FOREVER                     :   F O R E V E R ;
-KWD_FORM                        :   F O R M ;
-KWD_FUZZ                        :   F U Z Z ;
-KWD_HALT                        :   H A L T ;
-KWD_IF                          :   I F ;
-KWD_INTERPRET                   :   I N T E R P R E T ;
-KWD_ITERATE                     :   I T E R A T E ;
-KWD_LEAVE                       :   L E A V E ;
-KWD_NAME                        :   N A M E ;
-KWD_NOP                         :   N O P ;
-KWD_NOVALUE                     :   N O V A L U E ;
-KWD_NUMERIC                     :   N U M E R I C ;
-KWD_OFF                         :   O F F ;
-KWD_ON                          :   O N ;
-KWD_OPTIONS                     :   O P T I O N S ;
-KWD_OTHERWISE                   :   O T H E R W I S E ;
-KWD_PARSE                       :   P A R S E ;
-KWD_PROCEDURE                   :   P R O C E D U R E ;
-KWD_PULL                        :   P U L L ;
-KWD_PUSH                        :   P U S H ;
-KWD_QUEUE                       :   Q U E U E ;
-KWD_RETURN                      :   R E T U R N ;
-KWD_SAY                         :   S A Y ;
-KWD_SCIENTIFIC                  :   S C I E N T I F I C ;
-KWD_SELECT                      :   S E L E C T ;
-KWD_SIGNAL                      :   S I G N A L ;
-KWD_SOURCE                      :   S O U R C E ;
-KWD_SYNTAX                      :   S Y N T A X ;
-KWD_THEN                        :   T H E N ;
-KWD_TO                          :   T O ;
-KWD_TRACE                       :   T R A C E ;
-KWD_UNTIL                       :   U N T I L ;
-KWD_UPPER                       :   U P P E R ;
-KWD_VALUE                       :   V A L U E ;
-KWD_VAR                         :   V A R ;
-KWD_VERSION                     :   V E R S I O N ;
-KWD_WHEN                        :   W H E N ;
-KWD_WHILE                       :   W H I L E ;
-KWD_WITH                        :   W I T H ;
-
-/* Brackets  */
-BR_O                            :   Br_O_ ;
-BR_C                            :   Br_C_ ;
-
-/* Special variables: RC, RESULT, SIGL  */
-SPECIAL_VAR                     :   R C
-                                |   R E S U L T
-                                |   S I G L
-                                ;
-/* Label, const, var, number */
-NUMBER                          :   Number_ ;
-CONST_SYMBOL                    :   Const_symbol_ ;
-VAR_SYMBOL                      :   Var_Symbol_ ;
-
-/* String and concatenation */
-STRING                          :   String_
-
-/* Single characters */
-fragment Stop_                  :   '.' ;
-fragment Comma_                 :   ',' ;
-fragment Colon_                 :   ':' ;
-fragment Scol_                  :   ';' ;
-fragment Eq_                    :   '=' ;
-fragment Plus_                  :   '+' ;
-fragment Minus_                 :   '-' ;
-fragment Caret_                 :   '^' ;
-fragment Logical_Not_           :   '¬' ;
-fragment Underscore_            :   '_' ;
-fragment Exclamation_mark_      :   '!' ;
-fragment Question_mark_         :   '?' ;
-fragment Br_O_                  :   '(' ;
-fragment Br_C_                  :   ')' ;
-fragment Space_                 :   ' ' ;
-fragment Form_Feed_             :   '\f' ;
-fragment HTab_                  :   '\t' ;
-fragment VTab_                  :   '\u000b' ;
-fragment Caret_Return_          :   '\r' ;
-fragment New_Line_              :   '\n' ;
-fragment Quote_                 :   '"' ;
-fragment Apostrophe_            :   '\'' ;
-fragment Slash_                 :   '/' ;
-fragment Backslash_             :   '\\' ;
-fragment Asterisk_              :   '*' ;
-fragment More_                  :   '>' ;
-fragment Less_                  :   '<' ;
-fragment Percent_sign_          :   '%' ;
-fragment VBar_                  :   '|' ;
-fragment Amp_                   :   '&' ;
-fragment Hash_                  :   '#' ;
-fragment At_                    :   '@' ;
-fragment Dollar_                :   '$' ;
-
-/* Letters */
-fragment A                      :   ('a'|'A');
-fragment B                      :   ('b'|'B');
-fragment C                      :   ('c'|'C');
-fragment D                      :   ('d'|'D');
-fragment E                      :   ('e'|'E');
-fragment F                      :   ('f'|'F');
-fragment G                      :   ('g'|'G');
-fragment H                      :   ('h'|'H');
-fragment I                      :   ('i'|'I');
-fragment J                      :   ('j'|'J');
-fragment K                      :   ('k'|'K');
-fragment L                      :   ('l'|'L');
-fragment M                      :   ('m'|'M');
-fragment N                      :   ('n'|'N');
-fragment O                      :   ('o'|'O');
-fragment P                      :   ('p'|'P');
-fragment Q                      :   ('q'|'Q');
-fragment R                      :   ('r'|'R');
-fragment S                      :   ('s'|'S');
-fragment T                      :   ('t'|'T');
-fragment U                      :   ('u'|'U');
-fragment V                      :   ('v'|'V');
-fragment W                      :   ('w'|'W');
-fragment X                      :   ('x'|'X');
-fragment Y                      :   ('y'|'Y');
-fragment Z                      :   ('z'|'Z');
-
+readsource:
+/* ------------------------------------------------------------
+ * Read REXX File
+ * ------------------------------------------------------------
+ */
+tk=open("'PEJ.EXEC(BITA)'","R")
+stream=''
+do until eof(tk)
+   stream=stream||read(tk)';'    /* fetch all lines in one big string */
+end
+si=0
+string=stream
 return
+
+
+parse:
+/* ------------------------------------------------------------
+ * Process String
+ * ------------------------------------------------------------
+ */
+do until string=''
+   si=si+1
+   stmt=instruction(string)   /* Get next instruction */
+   if strip(stmt)=''          then iterate
+   else if dostmt(stmt)  =1   then say "DO discovered     : '"stmt"'"
+   else if setstmt(stmt) =1   then say "SET discovered    : '"stmt"'"
+   else if ifstmt(stmt)  =1   then say "IF  discovered    : '"stmt"'"
+   else if callstmt(stmt)=1   then say "CALL discovered   : '"stmt"'"
+   else if endstmt(stmt) =1   then say "END discovered    : '"stmt"'"
+   else if saystmt(stmt) =1   then say "SAY discovered    : '"stmt"'"
+   else if returnstmt(stmt)=1 then say "RETURN discovered : '"stmt"'"
+   else if exitstmt(stmt)=1   then say "EXIT discovered   : '"stmt"'"
+   else say '++++ unknown "'stmt"'"
+end
+return
+
+
+/* ------------------------------------------------------------
+ * Get Next Instruction
+ * ------------------------------------------------------------
+ */
+instruction:
+   parse value arg(1) with statement';'string
+return statement
+/* ------------------------------------------------------------
+ * Test for DO Instruction
+ * ------------------------------------------------------------
+ */
+dostmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'DO' then return 0
+   ww1=words(keyw)
+   if ww1=1 then do
+      return 1
+      say '*** simple DO Loop'
+   end
+   ww1=word(keyw,2)
+   if ww1='FOREVER' then do
+      return 1
+      say '*** DO FOREVER'
+   end
+   if ww1='WHILE' then do
+      parse value keyw with kdo' 'kwhile' 'xwhile
+      return 1
+      say '*** DO WHILE 'xwhile
+   end
+   if ww1='UNTIL' then do
+      parse value keyw with kdo' 'kwhile' 'xwhile
+      return 1
+      say '*** DO UNTIL 'xwhile
+   end
+return 1
+/* ------------------------------------------------------------
+ * Test for SET Instruction
+ * ------------------------------------------------------------
+ */
+setstmt:
+   parse upper arg instmt
+   if pos("=",instmt)=0 then return 0
+   parse value instmt with before"="after
+   ww1=words(before)
+   if ww1=0 | ww1>1 then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for IF Instruction
+ * ------------------------------------------------------------
+ */
+ifstmt:
+   parse upper arg instmt
+   if word(keyw,1)<>'IF' then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for CALL Instruction
+ * ------------------------------------------------------------
+ */
+callstmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'CALL' then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for END Instruction
+ * ------------------------------------------------------------
+ */
+endstmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'END' then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for SAY Instruction
+ * ------------------------------------------------------------
+ */
+saystmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'SAY' then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for RETURN Instruction
+ * ------------------------------------------------------------
+ */
+returnstmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'RETURN' then return 0
+return 1
+/* ------------------------------------------------------------
+ * Test for EXIT Instruction
+ * ------------------------------------------------------------
+ */
+exitstmt:
+   parse upper arg keyw
+   if word(keyw,1)<>'EXIT' then return 0
+return 1
+
